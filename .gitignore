@@ -28,3 +28,9 @@ Cargo.lock
 # Built Visual Studio Code Extensions
 *.vsix
 
+
+
+# Added by cargo
+
+/target
+/Cargo.lock
