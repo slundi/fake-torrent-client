@@ -1,77 +1,86 @@
+pub(crate) enum RefreshInterval {
+    Never,
+    TimedOrAfterStartedAnnounce,
+    TorrentVolatile,
+    TorrentPersistent,
+}
+
+const PEER_ID_LENGTH: usize = 20;
+
 #[allow(non_camel_case_types)]
-#[derive(Clone,Debug)]
+#[derive(Clone, Debug)]
 pub enum Client {
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     BITTORRENT_7_10_1_43917,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     BITTORRENT_7_10_3_44359,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     BITTORRENT_7_10_3_44429,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     DELUGE_1_3_13,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     DELUGE_1_3_14,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     DELUGE_1_3_15,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     DELUGE_2_0_3,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     LEAP_2_6_0_1,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_3_3_1,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_3_3_13,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_3_3_14,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_3_3_15,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_3_3_16,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_3_3_7,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_4_0_0,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_4_0_1,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_4_0_2,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_4_0_3,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_4_0_4,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_4_1_0,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_4_1_1,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_4_1_2,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_4_1_3,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_4_1_4,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_4_1_5,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_4_1_6,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_4_1_7,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_4_1_8,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_4_1_9,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_4_2_0,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_4_2_1,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_4_2_2,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_4_2_3,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_4_2_4,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_4_2_5,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     QBITTORRENT_4_3_0_1,
     QBITTORRENT_4_3_0,
     QBITTORRENT_4_3_1,
@@ -85,32 +94,32 @@ pub enum Client {
     QBITTORRENT_4_4_2,
     QBITTORRENT_4_4_3_1,
     RTORRENT_0_9_6_0_13_6,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     TRANSMISSION_2_82_14160,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     TRANSMISSION_2_92_14714,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     TRANSMISSION_2_93,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     TRANSMISSION_2_94,
     TRANSMISSION_3_00,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     UTORRENT_3_2_2_28500,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     UTORRENT_3_5_0_43916,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     UTORRENT_3_5_0_44090,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     UTORRENT_3_5_0_44294,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     UTORRENT_3_5_1_44332,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     UTORRENT_3_5_3_44358,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     UTORRENT_3_5_3_44428,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     UTORRENT_3_5_4_44498,
-    #[deprecated(note="The last update was more than 2 years ago")]
+    #[deprecated(note = "The last update was more than 2 years ago")]
     VUZE_5_7_5_0,
 }
 
@@ -180,6 +189,6 @@ pub fn get_client_name(key: &Client) -> Result<String, UnknownClientKey> {
         UTORRENT_3_5_3_44428 => Ok(String::from("utorrent-3.5.3_44428")),
         UTORRENT_3_5_4_44498 => Ok(String::from("utorrent-3.5.4_44498")),
         VUZE_5_7_5_0 => Ok(String::from("vuze-5.7.5.0")),
-        _ => Err(UnknownClientKey)
+        _ => Err(UnknownClientKey),
     }
 }
