@@ -5,7 +5,7 @@ pip install PyGithub
 """
 
 import base64
-import json
+import csv, json
 import os
 from dotenv import load_dotenv, find_dotenv
 from itertools import chain
@@ -60,9 +60,12 @@ for content in contents:
         print("Error processing %s: %s", content.path, exc)
 
 columns = [
+    "name",
     "kg_algo_type",
     "kg_algo_length",
     "kg_algo_pattern",
+    "kg_inclusive_lower_bound",
+    "kg_inclusive_upper_bound",
     "kg_refresh_on",
     "kg_case",
     "peer_algo_type",
@@ -79,14 +82,18 @@ columns = [
     "request_header_accept_encoding",
     "request_header_connection",
 ]
-rows = [["" for _ in range(len(columns))] for _ in range(len(data))]
+rows = [["" for _ in range(len(columns) + 1)] for _ in range(len(data))]
 for i, c in enumerate(data):
-    print(c[0])
+    rows[i][0] = c[0]
     rows[i][columns.index("kg_algo_type")] = c[1]["keyGenerator"]["algorithm"]["type"]
     if "length" in c[1]["keyGenerator"]["algorithm"]:
         rows[i][columns.index("kg_algo_length")] = c[1]["keyGenerator"]["algorithm"]["length"]
     if "pattern" in c[1]["keyGenerator"]["algorithm"]:
         rows[i][columns.index("kg_algo_pattern")] = c[1]["keyGenerator"]["algorithm"]["pattern"]
+    if "inclusiveLowerBound" in c[1]["keyGenerator"]["algorithm"]:
+        rows[i][columns.index("kg_inclusive_lower_bound")] = c[1]["keyGenerator"]["algorithm"]["inclusiveLowerBound"]
+    if "inclusiveUpperBound" in c[1]["keyGenerator"]["algorithm"]:
+        rows[i][columns.index("kg_inclusive_upper_bound")] = c[1]["keyGenerator"]["algorithm"]["inclusiveUpperBound"]
     rows[i][columns.index("kg_refresh_on")] = c[1]["keyGenerator"]["refreshOn"]
     rows[i][columns.index("kg_case")] = c[1]["keyGenerator"]["keyCase"]
     rows[i][columns.index("peer_algo_type")] = c[1]["peerIdGenerator"]["algorithm"]["type"]
@@ -107,4 +114,7 @@ for i, c in enumerate(data):
             rows[i][columns.index("request_header_accept_encoding")] = h["value"]
         elif h["name"] == "Connection":
             rows[i][columns.index("request_header_connection")] = h["value"]
-print(rows)
+
+wtr = csv.writer(open ("clients.csv", 'w'), delimiter=',', lineterminator='\n')
+wtr.writerow(columns)
+for r in rows: wtr.writerow(r)
