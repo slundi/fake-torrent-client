@@ -34,3 +34,6 @@ Cargo.lock
 
 /target
 /Cargo.lock
+
+# Custom rules
+.env
