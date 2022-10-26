@@ -7,7 +7,7 @@ pip install PyGithub
 import base64
 import json
 import os
-
+from itertools import chain
 from github import Github, GithubException
 from github.ContentFile import ContentFile
 from github.Repository import Repository
@@ -27,9 +27,12 @@ def get_sha_for_tag(repository: Repository, tag: str) -> str:
     else:
         raise ValueError("No Tag or Branch exists with that name")
 
+
 url = "https://raw.githubusercontent.com/anthonyraymond/joal/tree/master/resources/clients"
 
-github = Github(os.environ.get("GITHUB_TOKEN", ""))
+github = Github(
+    os.environ.get("GITHUB_TOKEN", "")
+)
 # download client files from repository
 repository = github.get_repo("anthonyraymond/joal")
 sha = get_sha_for_tag(repository, "master")
@@ -44,11 +47,61 @@ for content in contents:
             raise ValueError("Expected ContentFile")
         if file_content.content:
             file_data = base64.b64decode(file_content.content)
-            data.append((content.path.split('/')[-1][:-7], json.loads(file_data.decode("utf-8"))))
+            data.append(
+                (
+                    content.path.split("/")[-1][:-7],
+                    json.loads(file_data.decode("utf-8")),
+                )
+            )
     except (GithubException, IOError, ValueError) as exc:
         print("Error processing %s: %s", content.path, exc)
-    break
 
-# process JSON to generate a CSV
-for c in data:
-    print(c)
+columns = [
+    "kg_algo_type",
+    "kg_algo_length",
+    "kg_algo_pattern",
+    "kg_refresh_on",
+    "kg_case",
+    "peer_algo_type",
+    "peer_pattern",
+    "peer_refresh_on",
+    "peer_url_encode",
+    "url_encoder_encoding_exclusion_pattern",
+    "url_encoder_encoding_lower_case",
+    "query",
+    "numwant",
+    "numwant_on_stop",
+    "request_header_accept",
+    "request_header_user_agent",
+    "request_header_accept_encoding",
+    "request_header_connection",
+]
+rows = [["" for _ in range(len(columns))] for _ in range(len(data))]
+for i, c in enumerate(data):
+    print(c[0])
+    rows[i][columns.index("kg_algo_type")] = c[1]["keyGenerator"]["algorithm"]["type"]
+    if "length" in c[1]["keyGenerator"]["algorithm"]:
+        rows[i][columns.index("kg_algo_length")] = c[1]["keyGenerator"]["algorithm"]["length"]
+    if "pattern" in c[1]["keyGenerator"]["algorithm"]:
+        rows[i][columns.index("kg_algo_pattern")] = c[1]["keyGenerator"]["algorithm"]["pattern"]
+    rows[i][columns.index("kg_refresh_on")] = c[1]["keyGenerator"]["refreshOn"]
+    rows[i][columns.index("kg_case")] = c[1]["keyGenerator"]["keyCase"]
+    rows[i][columns.index("peer_algo_type")] = c[1]["peerIdGenerator"]["algorithm"]["type"]
+    rows[i][columns.index("peer_pattern")] = c[1]["peerIdGenerator"]["algorithm"]["type"]
+    rows[i][columns.index("peer_refresh_on")] = c[1]["peerIdGenerator"]["algorithm"]
+    rows[i][columns.index("peer_url_encode")] = c[1]["peerIdGenerator"]["shouldUrlEncode"]
+    rows[i][columns.index("url_encoder_encoding_exclusion_pattern")] = c[1]["urlEncoder"]["encodingExclusionPattern"]
+    rows[i][columns.index("url_encoder_encoding_lower_case")] = c[1]["urlEncoder"]["encodedHexCase"]
+    rows[i][columns.index("query")] = c[1]["query"]
+    rows[i][columns.index("numwant")] = c[1]["numwant"]
+    rows[i][columns.index("numwant_on_stop")] = c[1]["numwantOnStop"]
+    for h in c[1]["requestHeaders"]:
+        if h["name"] == "User-Agent":
+            rows[i][columns.index("request_header_user_agent")] = h["value"]
+        elif h["name"] == "Accept":
+            rows[i][columns.index("request_header_accept")] = h["value"]
+        elif h["name"] == "Accept-Encoding":
+            rows[i][columns.index("request_header_accept_encoding")] = h["value"]
+        elif h["name"] == "Connection":
+            rows[i][columns.index("request_header_connection")] = h["value"]
+print(rows)
