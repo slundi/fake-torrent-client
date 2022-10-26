@@ -7,6 +7,7 @@ pip install PyGithub
 import base64
 import json
 import os
+from dotenv import load_dotenv, find_dotenv
 from itertools import chain
 from github import Github, GithubException
 from github.ContentFile import ContentFile
@@ -29,6 +30,8 @@ def get_sha_for_tag(repository: Repository, tag: str) -> str:
 
 
 url = "https://raw.githubusercontent.com/anthonyraymond/joal/tree/master/resources/clients"
+
+load_dotenv(find_dotenv())
 
 github = Github(
     os.environ.get("GITHUB_TOKEN", "")
