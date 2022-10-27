@@ -28,7 +28,6 @@ def get_sha_for_tag(repository: Repository, tag: str) -> str:
     else:
         raise ValueError("No Tag or Branch exists with that name")
 
-
 url = "https://raw.githubusercontent.com/anthonyraymond/joal/tree/master/resources/clients"
 
 load_dotenv(find_dotenv())
@@ -46,13 +45,16 @@ for content in contents:
     try:
         path = content.path
         file_content = repository.get_contents(path, ref=sha)
+        name = content.path.split("/")[-1][:-7]
         if not isinstance(file_content, ContentFile):
             raise ValueError("Expected ContentFile")
         if file_content.content:
             file_data = base64.b64decode(file_content.content)
+            with open(f"clients/{name}.json", "w") as out:
+                out.write(json)
             data.append(
                 (
-                    content.path.split("/")[-1][:-7],
+                    name,
                     json.loads(file_data.decode("utf-8")),
                 )
             )
