@@ -1,12 +1,3 @@
-pub(crate) enum RefreshInterval {
-    Never,
-    TimedOrAfterStartedAnnounce,
-    TorrentVolatile,
-    TorrentPersistent,
-}
-
-const PEER_ID_LENGTH: usize = 20;
-
 #[allow(non_camel_case_types)]
 #[derive(Clone, Debug)]
 pub enum Client {
@@ -189,6 +180,6 @@ pub fn get_client_name(key: &Client) -> Result<String, UnknownClientKey> {
         UTORRENT_3_5_3_44428 => Ok(String::from("utorrent-3.5.3_44428")),
         UTORRENT_3_5_4_44498 => Ok(String::from("utorrent-3.5.4_44498")),
         VUZE_5_7_5_0 => Ok(String::from("vuze-5.7.5.0")),
-        _ => Err(UnknownClientKey),
+        _ => Err(crate::UnknownClientKey),
     }
 }

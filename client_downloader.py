@@ -28,13 +28,12 @@ def get_sha_for_tag(repository: Repository, tag: str) -> str:
     else:
         raise ValueError("No Tag or Branch exists with that name")
 
+
 url = "https://raw.githubusercontent.com/anthonyraymond/joal/tree/master/resources/clients"
 
 load_dotenv(find_dotenv())
 
-github = Github(
-    os.environ.get("GITHUB_TOKEN", "")
-)
+github = Github(os.environ.get("GITHUB_TOKEN", ""))
 # download client files from repository
 repository = github.get_repo("anthonyraymond/joal")
 sha = get_sha_for_tag(repository, "master")
@@ -49,13 +48,13 @@ for content in contents:
         if not isinstance(file_content, ContentFile):
             raise ValueError("Expected ContentFile")
         if file_content.content:
-            file_data = base64.b64decode(file_content.content)
+            file_data = base64.b64decode(file_content.content).decode("utf-8")
             with open(f"clients/{name}.json", "w") as out:
-                out.write(json)
+                out.write(file_data)
             data.append(
                 (
                     name,
-                    json.loads(file_data.decode("utf-8")),
+                    json.loads(file_data),
                 )
             )
     except (GithubException, IOError, ValueError) as exc:
@@ -89,21 +88,39 @@ for i, c in enumerate(data):
     rows[i][0] = c[0]
     rows[i][columns.index("kg_algo_type")] = c[1]["keyGenerator"]["algorithm"]["type"]
     if "length" in c[1]["keyGenerator"]["algorithm"]:
-        rows[i][columns.index("kg_algo_length")] = c[1]["keyGenerator"]["algorithm"]["length"]
+        rows[i][columns.index("kg_algo_length")] = c[1]["keyGenerator"]["algorithm"][
+            "length"
+        ]
     if "pattern" in c[1]["keyGenerator"]["algorithm"]:
-        rows[i][columns.index("kg_algo_pattern")] = c[1]["keyGenerator"]["algorithm"]["pattern"]
+        rows[i][columns.index("kg_algo_pattern")] = c[1]["keyGenerator"]["algorithm"][
+            "pattern"
+        ]
     if "inclusiveLowerBound" in c[1]["keyGenerator"]["algorithm"]:
-        rows[i][columns.index("kg_inclusive_lower_bound")] = c[1]["keyGenerator"]["algorithm"]["inclusiveLowerBound"]
+        rows[i][columns.index("kg_inclusive_lower_bound")] = c[1]["keyGenerator"][
+            "algorithm"
+        ]["inclusiveLowerBound"]
     if "inclusiveUpperBound" in c[1]["keyGenerator"]["algorithm"]:
-        rows[i][columns.index("kg_inclusive_upper_bound")] = c[1]["keyGenerator"]["algorithm"]["inclusiveUpperBound"]
+        rows[i][columns.index("kg_inclusive_upper_bound")] = c[1]["keyGenerator"][
+            "algorithm"
+        ]["inclusiveUpperBound"]
     rows[i][columns.index("kg_refresh_on")] = c[1]["keyGenerator"]["refreshOn"]
     rows[i][columns.index("kg_case")] = c[1]["keyGenerator"]["keyCase"]
-    rows[i][columns.index("peer_algo_type")] = c[1]["peerIdGenerator"]["algorithm"]["type"]
-    rows[i][columns.index("peer_pattern")] = c[1]["peerIdGenerator"]["algorithm"]["type"]
+    rows[i][columns.index("peer_algo_type")] = c[1]["peerIdGenerator"]["algorithm"][
+        "type"
+    ]
+    rows[i][columns.index("peer_pattern")] = c[1]["peerIdGenerator"]["algorithm"][
+        "type"
+    ]
     rows[i][columns.index("peer_refresh_on")] = c[1]["peerIdGenerator"]["algorithm"]
-    rows[i][columns.index("peer_url_encode")] = c[1]["peerIdGenerator"]["shouldUrlEncode"]
-    rows[i][columns.index("url_encoder_encoding_exclusion_pattern")] = c[1]["urlEncoder"]["encodingExclusionPattern"]
-    rows[i][columns.index("url_encoder_encoding_lower_case")] = c[1]["urlEncoder"]["encodedHexCase"]
+    rows[i][columns.index("peer_url_encode")] = c[1]["peerIdGenerator"][
+        "shouldUrlEncode"
+    ]
+    rows[i][columns.index("url_encoder_encoding_exclusion_pattern")] = c[1][
+        "urlEncoder"
+    ]["encodingExclusionPattern"]
+    rows[i][columns.index("url_encoder_encoding_lower_case")] = c[1]["urlEncoder"][
+        "encodedHexCase"
+    ]
     rows[i][columns.index("query")] = c[1]["query"]
     rows[i][columns.index("numwant")] = c[1]["numwant"]
     rows[i][columns.index("numwant_on_stop")] = c[1]["numwantOnStop"]
@@ -117,6 +134,23 @@ for i, c in enumerate(data):
         elif h["name"] == "Connection":
             rows[i][columns.index("request_header_connection")] = h["value"]
 
-wtr = csv.writer(open ("clients.csv", 'w'), delimiter=',', lineterminator='\n')
+wtr = csv.writer(open("clients.csv", "w"), delimiter=",", lineterminator="\n")
 wtr.writerow(columns)
-for r in rows: wtr.writerow(r)
+for r in rows:
+    wtr.writerow(r)
+
+with open("src/clients2.rs", "w") as f:
+    f.write(
+        "#[allow(non_camel_case_types)]\n#[derive(Clone, Debug)]\npub enum ClientVersion {\n"
+    )
+    for c in data:
+        f.write("    %s,\n" % c[0].title().replace(".", "_").replace("-", "_"))
+    f.write("}\n\nimpl Client {\n    /// Build and return the client drom the given key\n")
+    f.write("    pub fn from(client_version: ClientVersion) -> Client {\n");
+    f.write("        match client {\n")
+    for c in data:
+        f.write("            %s => Client {\n" % c[0].title().replace(".", "_").replace("-", "_"))
+        f.write("                name: String::from(\"%s\"),\n" % c[0])
+        f.write("                ..Default::default()\n")  # TODO: all remaining fields
+        f.write("            },\n")
+    f.write("        }\n    }\n}\n")

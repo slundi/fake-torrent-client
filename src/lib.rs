@@ -1,5 +1,15 @@
 mod algorithm;
 mod clients;
+
+const PEER_ID_LENGTH: usize = 20;
+
+pub enum RefreshInterval {
+    Never,
+    TimedOrAfterStartedAnnounce,
+    TorrentVolatile,
+    TorrentPersistent,
+}
+
 pub struct Client {
     pub name: String,
     pub key :String,
@@ -25,12 +35,12 @@ pub struct Client {
     key_pattern: String,
     /// for RANDOM_POOL_WITH_CHECKSUM
     prefix: String,
-    key_refresh_on: clients::RefreshInterval,
+    key_refresh_on: RefreshInterval,
     key_uppercase: Option<bool>,
     //----------- peer ID
     peer_algorithm: algorithm::Algorithm,
     peer_pattern: String,
-    peer_refresh_on: clients::RefreshInterval,
+    peer_refresh_on: RefreshInterval,
     peer_prefix:String,
     //----------- URL encoder 
     encoding_exclusion_pattern: String,
@@ -40,11 +50,6 @@ pub struct Client {
 }
 
 impl Client {
-    /// Build and return the client drom the given key
-    pub fn from(client: clients::Client) -> Client {
-        todo!()
-    }
-
     pub fn default() -> Self { Client {
         //client configuration
         //key generator default values
@@ -52,13 +57,13 @@ impl Client {
         key_length: 0,
         key_pattern:String::new(), prefix:String::new(),
         key_uppercase: None,
-        key_refresh_on: clients::RefreshInterval::TimedOrAfterStartedAnnounce,
+        key_refresh_on: RefreshInterval::TimedOrAfterStartedAnnounce,
         key_refresh_every: 0,
         //peer ID generator
         peer_algorithm: algorithm::Algorithm::Regex,
         peer_pattern: String::new(),
         peer_prefix:String::new(),
-        peer_refresh_on: clients::RefreshInterval::Never,
+        peer_refresh_on: RefreshInterval::Never,
         //URL encoder
         encoding_exclusion_pattern: r"[A-Za-z0-9-]".to_owned(),
         uppercase_encoded_hex: false,
@@ -78,16 +83,31 @@ impl Client {
         name: String::from("INVALID"),
     }}
 
+    /// Default values for Bitorrent clients for any versions
+    fn default_bittorent() -> Self { Client {
+        key_length: 8,
+        key_uppercase: Some(true),
+        key_refresh_every: 10,
+        //peer ID generator
+        peer_pattern: String::new(), //TODO:
+        //URL encoder
+        should_url_encode: true,
+        //query headers
+        query: "info_hash={infohash}&peer_id={peerid}&port={port}&uploaded={uploaded}&downloaded={downloaded}&left={left}&corrupt=0&key={key}&event={event}&numwant={numwant}&compact=1&no_peer_id=1".to_owned(),
+        .. Client::default()
+    }}
+
     /// Returns the query to append to your announce URL. Variables are:
     /// * `{infohash}`:
     /// * `{peerid}`:
-    /// * `{port}`:
+    /// * `{port}`: torrent port
     /// * `{uploaded}`: uploaded data in bytes
     /// * `{downloaded}`: downloaded data in bytes
     /// * `{left}`: remaining data to download in bytes
     /// * `{key}`:
     /// * `{event}`:
     /// * `{numwant}`:
+    /// * `{os}` and `{java}` for Vuze
     /// 
     /// Returns: (URL, Vec<(Header name, Header value)>)
     pub fn get_query(&self) -> (String, Vec<(String,String)>) {
