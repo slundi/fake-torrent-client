@@ -73,7 +73,7 @@ for content in contents:
             raise ValueError("Expected ContentFile")
         if file_content.content:
             file_data = base64.b64decode(file_content.content).decode("utf-8")
-            with open(f"clients/{name}.json", "w") as out:
+            with open(f"clients/{name}.json", "w", encoding="utf-8") as out:
                 out.write(file_data)
             data.append(
                 (
@@ -95,6 +95,7 @@ columns = [
     "kg_case",
     "peer_algo_type",
     "peer_pattern",
+    "peer_prefix",
     "peer_refresh_on",
     "peer_url_encode",
     "url_encoder_encoding_exclusion_pattern",
@@ -127,6 +128,8 @@ for i, c in enumerate(data):
         rows[i][columns.index("peer_pattern")] = c[1]["peerIdGenerator"]["algorithm"]["pattern"]
     if "charactersPool" in c[1]["peerIdGenerator"]["algorithm"]:
         rows[i][columns.index("peer_pattern")] = c[1]["peerIdGenerator"]["algorithm"]["charactersPool"]
+    if "prefix" in c[1]["peerIdGenerator"]["algorithm"]:
+        rows[i][columns.index("peer_prefix")] = c[1]["peerIdGenerator"]["algorithm"]["prefix"]
     rows[i][columns.index("peer_refresh_on")] = c[1]["peerIdGenerator"]["refreshOn"]
     rows[i][columns.index("peer_url_encode")] = c[1]["peerIdGenerator"]["shouldUrlEncode"]
     rows[i][columns.index("url_encoder_encoding_exclusion_pattern")] = c[1]["urlEncoder"]["encodingExclusionPattern"]
@@ -146,12 +149,12 @@ for i, c in enumerate(data):
         elif h["name"] == "Accept-Language":
             rows[i][columns.index("request_header_accept_language")] = h["value"]
 
-wtr = csv.writer(open("clients.csv", "w"), delimiter=",", lineterminator="\n")
+wtr = csv.writer(open("clients.csv", "w", encoding="utf-8"), delimiter=",", lineterminator="\n")
 wtr.writerow(columns)
 for r in rows:
     wtr.writerow(r)
 
-with open("src/clients.rs", "w") as f:
+with open("src/clients.rs", "w", encoding="utf-8") as f:
     f.write("// Generated file, last update was: %s\n" % datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
     f.write("#[allow(non_camel_case_types)]\n")
     f.write("#[derive(Clone, Debug)]\npub enum ClientVersion {\n")
@@ -161,7 +164,7 @@ with open("src/clients.rs", "w") as f:
     f.write("    pub fn from(client_version: ClientVersion) -> crate::Client {\n");
     f.write("        match client_version {\n")
     for r in rows:
-        f.write("            %s => crate::Client {\n" % r[0].title().replace(".", "_").replace("-", "_"))
+        f.write("            ClientVersion::%s => crate::Client {\n" % r[0].title().replace(".", "_").replace("-", "_"))
         f.write("                name: String::from(\"%s\"),\n" % r[0])
         # key
         write_algorithm(f, "key_algorithm", r[columns.index("kg_algo_type")])
@@ -180,7 +183,7 @@ with open("src/clients.rs", "w") as f:
         write_refresh_interval(f, "key_refresh_on", r[columns.index("kg_refresh_on")])
         # peer
         if r[columns.index("peer_algo_type")] == "REGEX":
-            f.write("                peer_pattern: String::from(\"%s\"),\n" % r[columns.index("peer_pattern")])
+            f.write("                peer_pattern: String::from(\"%s\"),\n" % r[columns.index("peer_pattern")].replace("\\","\\\\"))
         else:
             write_algorithm(f, "peer_algorithm", r[columns.index("peer_algo_type")])
             f.write("                peer_prefix: String::from(\"%s\"),\n" % r[columns.index("peer_prefix")])
@@ -190,7 +193,7 @@ with open("src/clients.rs", "w") as f:
         # misc
         f.write("                num_want: %s, num_want_on_stop: %s,\n" % (r[columns.index("numwant")], r[columns.index("numwant_on_stop")]))
         f.write("                query: String::from(\"%s\"),\n" % r[columns.index("query")])
-        f.write("                encoding_exclusion_pattern: String::from(\"%s\"),\n" % r[columns.index("url_encoder_encoding_exclusion_pattern")])
+        f.write("                encoding_exclusion_pattern: String::from(\"%s\"),\n" % r[columns.index("url_encoder_encoding_exclusion_pattern")].replace("\\","\\\\"))
         f.write("                peer_url_encode: %s,\n" % to_rust_boolean(r[columns.index("peer_url_encode")]))
         # request headers
         f.write("                user_agent: String::from(\"%s\"),\n" % r[columns.index("request_header_user_agent")])
@@ -205,13 +208,3 @@ with open("src/clients.rs", "w") as f:
         f.write("                ..crate::Client::default()\n")
         f.write("            },\n")
     f.write("        }\n    }\n}\n")
-
-"""pub struct Client {
-    pub key :String,
-    pub peer_id: String,
-    pub key_refresh_every: u16,
-    /// Optional. Number of peers that the client would like to receive from the tracker. This value is permitted to be zero. If omitted, typically defaults to 50 peers.
-    //----------- URL encoder 
-    /// if the encoded hex string should be in upper case or no
-    should_url_encode: bool,
-}"""

@@ -49,7 +49,7 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn default() -> Self { Client {
+    pub(crate) fn default() -> Self { Client {
         //client configuration
         //key generator default values
         key_algorithm: algorithm::Algorithm::Hash,
