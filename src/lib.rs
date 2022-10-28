@@ -2,7 +2,7 @@ mod algorithm;
 mod clients;
 
 const PEER_ID_LENGTH: usize = 20;
-const KEY_LENGTH: u8 = 8;
+const KEY_LENGTH: usize = 8;
 
 pub enum RefreshInterval {
     Never,
@@ -102,3 +102,53 @@ impl Client {
         (self.query.clone(), headers)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{Client, clients::ClientVersion};
+
+    const CLIENT_VERSIONS: [ClientVersion; 62] = [
+        ClientVersion::Bittorrent_7_10_1_43917, ClientVersion::Bittorrent_7_10_3_44359, ClientVersion::Bittorrent_7_10_3_44429,
+        ClientVersion::Deluge_1_3_13, ClientVersion::Deluge_1_3_14, ClientVersion::Deluge_1_3_15, ClientVersion::Deluge_2_0_3,
+        ClientVersion::Leap_2_6_0_1,
+        ClientVersion::Rtorrent_0_9_6_0_13_6,
+        ClientVersion::Transmission_2_82_14160, ClientVersion::Transmission_2_92_14714, ClientVersion::Transmission_2_93, ClientVersion::Transmission_2_94, ClientVersion::Transmission_3_00,
+        ClientVersion::Utorrent_3_2_2_28500, ClientVersion::Utorrent_3_5_0_43916, ClientVersion::Utorrent_3_5_0_44090, ClientVersion::Utorrent_3_5_0_44294, ClientVersion::Utorrent_3_5_1_44332, ClientVersion::Utorrent_3_5_3_44358, ClientVersion::Utorrent_3_5_3_44428, ClientVersion::Utorrent_3_5_4_44498,
+        ClientVersion::Vuze_5_7_5_0,
+        //QBittorrent
+        ClientVersion::Qbittorrent_3_3_1, ClientVersion::Qbittorrent_3_3_13, ClientVersion::Qbittorrent_3_3_14, ClientVersion::Qbittorrent_3_3_15, ClientVersion::Qbittorrent_3_3_16, ClientVersion::Qbittorrent_3_3_7,
+        ClientVersion::Qbittorrent_4_0_0, ClientVersion::Qbittorrent_4_0_1, ClientVersion::Qbittorrent_4_0_2, ClientVersion::Qbittorrent_4_0_3, ClientVersion::Qbittorrent_4_0_4,
+        ClientVersion::Qbittorrent_4_1_0, ClientVersion::Qbittorrent_4_1_1, ClientVersion::Qbittorrent_4_1_2, ClientVersion::Qbittorrent_4_1_3, ClientVersion::Qbittorrent_4_1_4, ClientVersion::Qbittorrent_4_1_5, ClientVersion::Qbittorrent_4_1_6, ClientVersion::Qbittorrent_4_1_7, ClientVersion::Qbittorrent_4_1_8, ClientVersion::Qbittorrent_4_1_9,
+        ClientVersion::Qbittorrent_4_2_0, ClientVersion::Qbittorrent_4_2_1, ClientVersion::Qbittorrent_4_2_2, ClientVersion::Qbittorrent_4_2_3, ClientVersion::Qbittorrent_4_2_4, ClientVersion::Qbittorrent_4_2_5,
+        ClientVersion::Qbittorrent_4_3_0_1, ClientVersion::Qbittorrent_4_3_0, ClientVersion::Qbittorrent_4_3_1, ClientVersion::Qbittorrent_4_3_2, ClientVersion::Qbittorrent_4_3_3, ClientVersion::Qbittorrent_4_3_4_1, ClientVersion::Qbittorrent_4_3_5, ClientVersion::Qbittorrent_4_3_6, ClientVersion::Qbittorrent_4_3_8, ClientVersion::Qbittorrent_4_3_9,
+        ClientVersion::Qbittorrent_4_4_2, ClientVersion::Qbittorrent_4_4_3_1
+    ];
+
+    #[test]
+    fn check_queries() {
+        for cv in crate::tests::CLIENT_VERSIONS {
+            let c = Client::from(cv);
+            let q = c.query;
+            assert!(q.contains("info_hash={infohash}"));
+            assert!(q.contains("peer_id={peerid}"));
+            assert!(q.contains("uploaded={uploaded}"));
+            assert!(q.contains("downloaded={downloaded}"));
+            assert!(q.contains("left={left}"));
+            assert!(q.contains("key={key}"));
+            assert!(q.contains("event={event}"));
+            if !c.name.starts_with("rtorrent") {
+                assert!(q.contains("numwant={numwant}"));
+            }
+            if q.contains("ipv6=") || q.contains("{ipv6}") {
+                assert!(q.contains("ipv6={ipv6}"));
+            }
+            if q.contains("ip=") || q.contains("{ip}") {
+                assert!(q.contains("ip={ip}"));
+            }
+            assert!(!q.contains("&&"));
+            assert!(!q.starts_with("&"));
+            assert!(!q.ends_with("&"));
+        }
+    }
+}
+

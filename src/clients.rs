@@ -1,4 +1,4 @@
-// Generated file, last update was: 2022-10-28 15:31
+// Generated file, last update was: 2022-10-28 15:37
 #[allow(non_camel_case_types)]
 #[derive(Clone, Debug)]
 pub enum ClientVersion {
