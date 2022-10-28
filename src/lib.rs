@@ -1,7 +1,7 @@
 use url::form_urlencoded::byte_serialize;
 
 mod algorithm;
-mod clients;
+pub mod clients;
 
 const PEER_ID_LENGTH: usize = 20;
 const KEY_LENGTH: usize = 8;
