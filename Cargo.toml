@@ -1,6 +1,12 @@
 [package]
 name = "fake-torrent-client"
-version = "0.1.0"
+version = "0.9.0"
+author = "Sébastien LUNDI"
+description = "A rust library to generate torrent client information (key, peer ID, query, ...)"
+readme = "README.md"
+repository = "https://github.com/slundi/fake-torrent-client"
+license = "MIT/Apache-2.0"
+keywords = ["torrent", "client", "fake", "ratio"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
