@@ -1,4 +1,4 @@
-// Generated file, last update was: 2022-10-28 15:37
+// Generated file, last update was: 2022-10-28 20:55
 #[allow(non_camel_case_types)]
 #[derive(Clone, Debug)]
 pub enum ClientVersion {
@@ -69,7 +69,7 @@ pub enum ClientVersion {
 impl crate::Client {
     /// Build and return the client drom the given key
     pub fn from(client_version: ClientVersion) -> crate::Client {
-        match client_version {
+        let mut client = match client_version {
             ClientVersion::Bittorrent_7_10_1_43917 => crate::Client {
                 name: String::from("bittorrent-7.10.1_43917"),
                 key_algorithm: crate::algorithm::Algorithm::Hash,
@@ -1082,6 +1082,9 @@ impl crate::Client {
                 accept_language: String::from(""),
                 ..crate::Client::default()
             },
-        }
+        };
+        client.generate_key();
+        client.generate_peer_id();
+        client
     }
 }

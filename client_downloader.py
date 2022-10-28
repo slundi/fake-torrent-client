@@ -161,7 +161,7 @@ with open("src/clients.rs", "w", encoding="utf-8") as f:
         f.write("    %s,\n" % r[0].title().replace(".", "_").replace("-", "_"))
     f.write("}\n\nimpl crate::Client {\n    /// Build and return the client drom the given key\n")
     f.write("    pub fn from(client_version: ClientVersion) -> crate::Client {\n")
-    f.write("        match client_version {\n")
+    f.write("        let mut client = match client_version {\n")
     for r in rows:
         f.write("            ClientVersion::%s => crate::Client {\n" % r[0].title().replace(".", "_").replace("-", "_"))
         f.write("                name: String::from(\"%s\"),\n" % r[0])
@@ -206,4 +206,5 @@ with open("src/clients.rs", "w", encoding="utf-8") as f:
             f.write("                accept_language: String::from(\"%s\"),\n" % r[columns.index("request_header_accept_language")])
         f.write("                ..crate::Client::default()\n")
         f.write("            },\n")
-    f.write("        }\n    }\n}\n")
+    f.write("        };\n        client.generate_key();\n        client.generate_peer_id();        client\n")
+    f.write("    }\n}\n")
