@@ -8,7 +8,6 @@ import base64
 import csv, json
 import os, datetime
 from dotenv import load_dotenv, find_dotenv
-from itertools import chain
 from github import Github, GithubException
 from github.ContentFile import ContentFile
 from github.Repository import Repository
@@ -23,7 +22,7 @@ def write_algorithm(file_handler, variable_name, value):
         v = "Regex"
     elif value == "RANDOM_POOL_WITH_CHECKSUM":
         v = "RandomPoolWithChecksum"
-    f.write("                %s: crate::algorithm::Algorithm::%s,\n" % (variable_name, v))
+    file_handler.write("                %s: crate::algorithm::Algorithm::%s,\n" % (variable_name, v))
 
 def write_refresh_interval(file_handler, variable_name, value):
     v = "Never"
@@ -33,20 +32,20 @@ def write_refresh_interval(file_handler, variable_name, value):
         v = "TorrentPersistent"
     elif value == "TORRENT_VOLATILE":
         v = "TorrentVolatile"
-    f.write("                %s: crate::RefreshInterval::%s,\n" % (variable_name, v))
+    file_handler.write("                %s: crate::RefreshInterval::%s,\n" % (variable_name, v))
 
 def to_rust_boolean(value):
     return "true" if value else "false"
 
-def get_sha_for_tag(repository: Repository, tag: str) -> str:
+def get_sha_for_tag(repo: Repository, tag: str) -> str:
     """
     Returns a commit PyGithub object for the specified repository and tag.
     """
-    branches = repository.get_branches()
+    branches = repo.get_branches()
     if matched_branches := [match for match in branches if match.name == tag]:
         return matched_branches[0].commit.sha
 
-    tags = repository.get_tags()
+    tags = repo.get_tags()
     if matched_tags := [match for match in tags if match.name == tag]:
         return matched_tags[0].commit.sha
     else:
@@ -161,7 +160,7 @@ with open("src/clients.rs", "w", encoding="utf-8") as f:
     for r in rows:
         f.write("    %s,\n" % r[0].title().replace(".", "_").replace("-", "_"))
     f.write("}\n\nimpl crate::Client {\n    /// Build and return the client drom the given key\n")
-    f.write("    pub fn from(client_version: ClientVersion) -> crate::Client {\n");
+    f.write("    pub fn from(client_version: ClientVersion) -> crate::Client {\n")
     f.write("        match client_version {\n")
     for r in rows:
         f.write("            ClientVersion::%s => crate::Client {\n" % r[0].title().replace(".", "_").replace("-", "_"))

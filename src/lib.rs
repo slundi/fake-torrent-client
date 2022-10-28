@@ -1,3 +1,5 @@
+use url::form_urlencoded::byte_serialize;
+
 mod algorithm;
 mod clients;
 
@@ -100,6 +102,26 @@ impl Client {
         if !self.accept_encoding.is_empty() {headers.push((String::from("Accept-Encoding"), self.accept_encoding.clone()));}
         if !self.accept_language.is_empty() {headers.push((String::from("Accept-Language"), self.accept_language.clone()));}
         (self.query.clone(), headers)
+    }
+
+    /// Generate the client key, and encode it for HTTP request
+    pub fn generate_key(&mut self) {
+        match &self.key_algorithm {
+            algorithm::Algorithm::Hash => self.key = algorithm::hash(false, self.key_uppercase),
+            algorithm::Algorithm::HashNoLeadingZero => self.key = algorithm::hash(true, self.key_uppercase),
+            algorithm::Algorithm::DigitRangeTransformedToHexWithoutLeadingZeroes => self.key = algorithm::digit_range_transformed_to_hex_without_leading_zero(),
+            algorithm::Algorithm::Regex => todo!(),
+            _ => {},
+        }
+    }
+    /// Generate the peer ID and encode it for HTTP request
+    pub fn generate_peer_id(&mut self) {
+        match &self.peer_algorithm {
+            algorithm::Algorithm::Regex                     => self.peer_id = algorithm::regex(self.peer_pattern.replace("\\\\", "\\")), //replace \ otherwise the generator crashes
+            algorithm::Algorithm::RandomPoolWithChecksum => self.peer_id = algorithm::random_pool_with_checksum(&self.peer_prefix, &self.peer_pattern),
+            _ => {}
+        }
+        self.peer_id = byte_serialize(&self.peer_id.as_bytes()[0..PEER_ID_LENGTH]).collect(); //take the first 20 charsencode it because weird chars
     }
 }
 
