@@ -1,6 +1,6 @@
 [package]
 name = "fake-torrent-client"
-version = "0.9.0"
+version = "0.9.1"
 author = "Sébastien LUNDI"
 description = "A rust library to generate torrent client information (key, peer ID, query, ...)"
 readme = "README.md"
