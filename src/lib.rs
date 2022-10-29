@@ -6,6 +6,7 @@ pub mod clients;
 const PEER_ID_LENGTH: usize = 20;
 const KEY_LENGTH: usize = 8;
 
+#[derive(Debug, Clone)]
 pub enum RefreshInterval {
     Never,
     TimedOrAfterStartedAnnounce,
@@ -13,11 +14,12 @@ pub enum RefreshInterval {
     TorrentPersistent,
 }
 
+#[derive(Debug, Clone)]
 pub struct Client {
     pub name: String,
     pub key :String,
     pub peer_id: String,
-    pub key_refresh_every: u16,
+    pub key_refresh_every: Option<u16>,
     pub query: String,
     //request_headers: HashMap<String, String>, //HashMap<&str, i32> = [("Norway", 100), ("Denmark", 50), ("Iceland", 10)]
     pub user_agent: String,
@@ -58,7 +60,7 @@ impl Client {
         key_pattern:String::new(),
         key_uppercase: None,
         key_refresh_on: RefreshInterval::TimedOrAfterStartedAnnounce,
-        key_refresh_every: 0,
+        key_refresh_every: None,
         //peer ID generator
         peer_algorithm: algorithm::Algorithm::Regex,
         peer_pattern: String::new(), peer_prefix:String::new(),
@@ -106,22 +108,22 @@ impl Client {
 
     /// Generate the client key, and encode it for HTTP request
     pub fn generate_key(&mut self) {
-        match &self.key_algorithm {
-            algorithm::Algorithm::Hash => self.key = algorithm::hash(false, self.key_uppercase),
-            algorithm::Algorithm::HashNoLeadingZero => self.key = algorithm::hash(true, self.key_uppercase),
-            algorithm::Algorithm::DigitRangeTransformedToHexWithoutLeadingZeroes => self.key = algorithm::digit_range_transformed_to_hex_without_leading_zero(),
-            algorithm::Algorithm::Regex => todo!(),
-            _ => {},
-        }
+        self.key = match &self.key_algorithm {
+            algorithm::Algorithm::Hash => algorithm::hash(false, self.key_uppercase),
+            algorithm::Algorithm::HashNoLeadingZero => algorithm::hash(true, self.key_uppercase),
+            algorithm::Algorithm::DigitRangeTransformedToHexWithoutLeadingZeroes => algorithm::digit_range_transformed_to_hex_without_leading_zero(),
+            algorithm::Algorithm::Regex => byte_serialize(&algorithm::regex(self.peer_pattern.clone()).as_bytes()[0..KEY_LENGTH]).collect(),
+            _ => String::with_capacity(KEY_LENGTH),
+        };
     }
     /// Generate the peer ID and encode it for HTTP request
     pub fn generate_peer_id(&mut self) {
-        match &self.peer_algorithm {
-            algorithm::Algorithm::Regex                     => self.peer_id = algorithm::regex(self.peer_pattern.replace("\\\\", "\\")), //replace \ otherwise the generator crashes
-            algorithm::Algorithm::RandomPoolWithChecksum => self.peer_id = algorithm::random_pool_with_checksum(&self.peer_prefix, &self.peer_pattern),
-            _ => {}
-        }
-        self.peer_id = byte_serialize(&self.peer_id.as_bytes()[0..PEER_ID_LENGTH]).collect(); //take the first 20 charsencode it because weird chars
+        let hash = match &self.peer_algorithm {
+            algorithm::Algorithm::Regex                  => algorithm::regex(self.peer_pattern.clone()), //replace \ otherwise the generator crashes
+            algorithm::Algorithm::RandomPoolWithChecksum => algorithm::random_pool_with_checksum(&self.peer_prefix, &self.peer_pattern),
+            _ => String::new()
+        };
+        self.peer_id = byte_serialize(&hash.as_bytes()[0..PEER_ID_LENGTH]).collect(); //take the first 20 charsencode it because weird chars
     }
 }
 
