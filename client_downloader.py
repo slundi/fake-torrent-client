@@ -28,7 +28,7 @@ def write_algorithm(file_handler, variable_name, value):
         algo = "Regex"
     elif value == "RANDOM_POOL_WITH_CHECKSUM":
         algo = "RandomPoolWithChecksum"
-    file_handler.write(f"                {variable_name}: crate::algorithm::Algorithm::{algo},\n")
+    file_handler.write(f"                self.{variable_name} = crate::algorithm::Algorithm::{algo};\n")
 
 
 def write_refresh_interval(file_handler, variable_name, value):
@@ -42,7 +42,7 @@ def write_refresh_interval(file_handler, variable_name, value):
         when = "TorrentPersistent"
     elif value == "TORRENT_VOLATILE":
         when = "TorrentVolatile"
-    file_handler.write(f"                {variable_name}: crate::RefreshInterval::{when},\n")
+    file_handler.write(f"                self.{variable_name} = crate::RefreshInterval::{when};\n")
 
 
 def to_rust_boolean(value):
@@ -187,59 +187,52 @@ with open("src/clients.rs", "w", encoding="utf-8") as f:
     f.write(
         "}\n\nimpl crate::Client {\n    /// Build and return the client drom the given key\n")
     f.write(
-        "    pub fn from(client_version: ClientVersion) -> crate::Client {\n")
-    f.write("        let mut client = match client_version {\n")
+        "    pub fn build(&mut self, client_version: ClientVersion) {\n")
+    f.write("        match client_version {\n")
     for r in rows:
-        f.write("            ClientVersion::%s => crate::Client {\n" % r[0].title().replace(".", "_").replace("-", "_"))
-        f.write(f"                name: String::from(\"{r[0]}\"),\n")
+        f.write("            ClientVersion::%s => {\n" % r[0].title().replace(".", "_").replace("-", "_"))
+        f.write(f"                self.name = String::from(\"{r[0]}\");\n")
         # key
         write_algorithm(f, "key_algorithm", r[columns.index("kg_algo_type")])
         # if r[columns.index("kg_algo_length")] and r[columns.index("kg_algo_length")] != "8":
-        #     f.write("                key_length: %s,\n" % r[columns.index("kg_algo_length")])
+        #     f.write("                self.key_length = %s;\n" % r[columns.index("kg_algo_length")])
         if r[columns.index("kg_algo_pattern")]:
-            f.write("                key_pattern: String::from(r\"%s\"),\n" % r[columns.index("kg_algo_pattern")].replace('\\','\\\\'))
+            f.write("                self.key_pattern = String::from(r\"%s\");\n" % r[columns.index("kg_algo_pattern")].replace('\\','\\\\').encode("utf-8"))
         if r[columns.index("kg_case")] == "upper":
-            f.write("                key_uppercase: Some(true),\n")
+            f.write("                self.key_uppercase = Some(true);\n")
         elif r[columns.index("kg_case")] == "lower":
-            f.write("                key_uppercase: Some(false),\n")
+            f.write("                self.key_uppercase = Some(false);\n")
         else:
-            f.write("                key_uppercase: None,\n")
+            f.write("                self.key_uppercase = None;\n")
         # if r[columns.index("kg_inclusive_lower_bound")] and r[columns.index("kg_inclusive_upper_bound")]:
-        #     f.write("                TODO: String::from(\"%s\"),\n" % (r[columns.index("kg_inclusive_lower_bound")]))
+        #     f.write("                TODO: String::from(\"%s\");\n" % (r[columns.index("kg_inclusive_lower_bound")]))
         write_refresh_interval(f, "key_refresh_on", r[columns.index("kg_refresh_on")])
         if r[columns.index("kg_refresh_every")]:
-            f.write("                key_refresh_every: Some(%s),\n" % r[columns.index("kg_refresh_every")])
+            f.write("                self.key_refresh_every = Some(%s);\n" % r[columns.index("kg_refresh_every")])
         # peer
         write_algorithm(f, "peer_algorithm", r[columns.index("peer_algo_type")])
-        if r[columns.index("peer_algo_type")] in ["REGEX", "RANDOM_POOL_WITH_CHECKSUM"]:
-            f.write("                peer_pattern: String::from(r\"%s\"),\n" % r[columns.index("peer_pattern")].replace('\\','\\\\'))
-        else:
-            f.write("                peer_prefix: String::from(\"%s\"),\n" % r[columns.index("peer_prefix")])
+        if r[columns.index("peer_algo_type")]:
+            f.write("                self.peer_pattern = String::from(r\"%s\");\n" % r[columns.index("peer_pattern")].replace('\\','\\\\').encode("utf-8"))
+        if r[columns.index("peer_prefix")]:
+            f.write("                self.peer_prefix = String::from(\"%s\");\n" % r[columns.index("peer_prefix")])
         if r[columns.index("peer_refresh_on")] != "NEVER":
-            write_refresh_interval(f, "peer_refresh_on",
-                                   r[columns.index("peer_refresh_on")])
-        f.write("                uppercase_encoded_hex: %s,\n" % to_rust_boolean(r[columns.index("url_encoder_encoding_case")] == "upper"))
+            write_refresh_interval(f, "peer_refresh_on", r[columns.index("peer_refresh_on")])
+        f.write("                self.uppercase_encoded_hex = %s;\n" % to_rust_boolean(r[columns.index("url_encoder_encoding_case")] == "upper"))
         # misc
-        f.write("                num_want: %s, num_want_on_stop: %s,\n" % (r[columns.index("numwant")], r[columns.index("numwant_on_stop")]))
-        f.write("                query: String::from(\"%s\"),\n" % r[columns.index("query")])
-        f.write("                encoding_exclusion_pattern: String::from(r\"%s\"),\n" % r[columns.index("url_encoder_encoding_exclusion_pattern")].replace('\\','\\\\'))
-        f.write("                peer_url_encode: %s,\n" % to_rust_boolean(r[columns.index("peer_url_encode")]))
+        f.write("                self.num_want = %s; self.num_want_on_stop = %s;\n" % (r[columns.index("numwant")], r[columns.index("numwant_on_stop")]))
+        f.write("                self.query = String::from(\"%s\");\n" % r[columns.index("query")])
+        f.write("                self.encoding_exclusion_pattern = String::from(r\"%s\");\n" % r[columns.index("url_encoder_encoding_exclusion_pattern")].replace('\\','\\\\').encode("utf-8"))
+        f.write("                self.peer_url_encode = %s;\n" % to_rust_boolean(r[columns.index("peer_url_encode")]))
         # request headers
-        f.write("                user_agent: String::from(\"%s\"),\n" %
-                r[columns.index("request_header_user_agent")])
+        f.write("                self.user_agent = String::from(\"%s\");\n" % r[columns.index("request_header_user_agent")])
         if r[columns.index("request_header_accept_encoding")] != "gzip":
-            f.write("                accept_encoding: String::from(\"%s\"),\n" %
-                    r[columns.index("request_header_accept_encoding")])
+            f.write("                self.accept_encoding = String::from(\"%s\");\n" % r[columns.index("request_header_accept_encoding")])
         if r[columns.index("request_header_connection")]:
-            f.write("                connection: Some(String::from(\"%s\")),\n" %
-                    r[columns.index("request_header_connection")])
+            f.write("                self.connection = Some(String::from(\"%s\"));\n" % r[columns.index("request_header_connection")])
         if r[columns.index("request_header_accept")]:
-            f.write("                accept: String::from(\"%s\"),\n" %
-                    r[columns.index("request_header_accept")])
+            f.write("                self.accept = String::from(\"%s\");\n" % r[columns.index("request_header_accept")])
         if r[columns.index("request_header_accept_language")] != "gzip":
-            f.write("                accept_language: String::from(\"%s\"),\n" %
-                    r[columns.index("request_header_accept_language")])
-        f.write("                ..crate::Client::default()\n")
+            f.write("                self.accept_language = String::from(\"%s\");\n" % r[columns.index("request_header_accept_language")])
         f.write("            },\n")
-    f.write("        };\n        client.generate_key();\n        client.generate_peer_id();\n")
-    f.write("        client\n    }\n}\n")
+    f.write("        };\n        self.generate_key();\n        self.generate_peer_id();\n")
+    f.write("    }\n}\n")

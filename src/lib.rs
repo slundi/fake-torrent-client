@@ -52,8 +52,8 @@ pub struct Client {
     uppercase_encoded_hex: bool,
 }
 
-impl Client {
-    pub fn default() -> Self { Client {
+impl Default for Client {
+    fn default() -> Self { Client {
         //client configuration
         //key generator default values
         key_algorithm: algorithm::Algorithm::Hash,
@@ -83,6 +83,10 @@ impl Client {
         peer_id: String::new(),
         name: String::from("INVALID"),
     }}
+}
+
+impl Client {
+    pub fn new() -> Client {Client::default()}
 
     /// Returns the query to append to your announce URL. Variables are:
     /// * `{infohash}`:
@@ -151,7 +155,9 @@ mod tests {
     #[test]
     fn check_queries() {
         for cv in crate::tests::CLIENT_VERSIONS {
-            let c = Client::from(cv);
+            let mut c = Client::new();
+            c.build(cv);
+            // println!("CLient: {} {}", c.name, c.peer_pattern);
             let q = c.query;
             assert!(q.contains("info_hash={infohash}"));
             assert!(q.contains("peer_id={peerid}"));
