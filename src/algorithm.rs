@@ -40,7 +40,7 @@ pub(crate) fn regex(pattern: String) -> String {
 /// Return a hex string from a random integer between 1 and 2147483647
 pub(crate) fn digit_range_transformed_to_hex_without_leading_zero() -> String {
     let mut rng = rand::thread_rng();
-    return format!("{:x}", rng.gen_range(1u32..2147483647u32)).to_uppercase();
+    format!("{:x}", rng.gen_range(1u32..2147483647u32)).to_uppercase()
 }
 /// Used for some peer ID generation
 pub(crate) fn random_pool_with_checksum(prefix: &str, characters_pool: &str) -> String {

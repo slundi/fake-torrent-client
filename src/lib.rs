@@ -170,8 +170,8 @@ mod tests {
                 assert!(q.contains("ip={ip}"));
             }
             assert!(!q.contains("&&"));
-            assert!(!q.starts_with("&"));
-            assert!(!q.ends_with("&"));
+            assert!(!q.starts_with('&'));
+            assert!(!q.ends_with('&'));
         }
     }
 }

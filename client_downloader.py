@@ -181,7 +181,7 @@ for r in rows:
 with open("src/clients.rs", "w", encoding="utf-8") as f:
     f.write(f"// Generated file, last update was: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}s\n")
     f.write("#[allow(non_camel_case_types)]\n")
-    f.write("#[derive(Clone, Debug)]\npub enum ClientVersion {\n")
+    f.write("#[derive(Clone, Debug, strum_macros::EnumString)]\npub enum ClientVersion {\n")
     for r in rows:
         f.write(f"    {r[0].title().replace('.', '_').replace('-', '_')},\n")
     f.write(
@@ -210,10 +210,10 @@ with open("src/clients.rs", "w", encoding="utf-8") as f:
         if r[columns.index("kg_refresh_every")]:
             f.write("                key_refresh_every: Some(%s),\n" % r[columns.index("kg_refresh_every")])
         # peer
+        write_algorithm(f, "peer_algorithm", r[columns.index("peer_algo_type")])
         if r[columns.index("peer_algo_type")] in ["REGEX", "RANDOM_POOL_WITH_CHECKSUM"]:
             f.write("                peer_pattern: String::from(r\"%s\"),\n" % r[columns.index("peer_pattern")].replace('\\','\\\\'))
         else:
-            write_algorithm(f, "peer_algorithm", r[columns.index("peer_algo_type")])
             f.write("                peer_prefix: String::from(\"%s\"),\n" % r[columns.index("peer_prefix")])
         if r[columns.index("peer_refresh_on")] != "NEVER":
             write_refresh_interval(f, "peer_refresh_on",
